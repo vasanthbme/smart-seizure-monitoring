@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d18">
+<title>SeizureWatch Pro | Health Intelligence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{
+ --bg:#080d18;--panel:#111b2b;--line:#243147;--text:#edf3ff;
+ --muted:#8998b2;--cyan:#57e5dc;--blue:#829cff;
+ --green:#63e6a5;--yellow:#ffce70;--red:#ff7285;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px 'DM Sans',sans-serif}
+button{font:inherit;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+.app{display:flex;min-height:100vh}
+aside{width:235px;flex-shrink:0;background:#0a101d;border-right:1px solid var(--line);padding:23px 14px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:11px;padding:0 9px 28px}
+.logo{height:43px;width:43px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#08121d;font-size:23px;font-weight:800}
+.brand h1{font:800 16px Manrope;margin:0}
+.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:1.5px;margin-top:5px}
+.nav-label{font-size:10px;letter-spacing:1.7px;color:#687995;padding:12px}
+nav{display:grid;gap:5px}
+nav button{padding:12px;border:1px solid transparent;border-radius:11px;background:none;color:#94a4bd;text-align:left;display:flex;gap:12px;align-items:center}
+nav button:hover{background:#ffffff08}
+nav button.active{color:var(--cyan);background:#57e5dc10;border-color:#57e5dc24}
+.nav-icon{width:20px;text-align:center;font-size:17px}
+.count{margin-left:auto;font-size:10px}
+.side-status{margin-top:auto;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:13px;font-size:12px}
+.side-status small{display:block;color:var(--muted);margin-top:8px;line-height:1.6}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--yellow);margin-right:7px}
+.dot.on{background:var(--green);box-shadow:0 0 9px #63e6a555}
+.dot.off{background:var(--red)}
+main{flex:1;min-width:0;padding:27px 29px 35px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:25px}
+.eyebrow{font-size:10px;letter-spacing:2px;color:var(--cyan);font-weight:700}
+h2{font:800 clamp(23px,3vw,31px) Manrope;letter-spacing:-1px;margin:8px 0 5px}
+.sub{font-size:12px;color:var(--muted);line-height:1.7}
+.top-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pill,.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:10px 12px;font-size:11px}
+.btn:hover{border-color:var(--cyan)}
+.btn.primary{background:var(--cyan);border-color:var(--cyan);color:#07131a;font-weight:700}
+.page{display:none}
+.page.active{display:block;animation:appear .2s ease}
+@keyframes appear{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+.notice{padding:13px 15px;border:1px solid #ffce7030;background:#ffce7009;color:#d7c28f;border-radius:12px;font-size:11px;line-height:1.7;margin-bottom:18px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:24px 0 13px}
+.section-head h3{font:700 14px Manrope;margin:0}
+.section-head span{color:var(--muted);font-size:11px}
+.grid{display:grid;gap:14px}
+.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:linear-gradient(145deg,#121e30,#0e1725);border:1px solid var(--line);border-radius:17px;padding:18px;min-width:0;box-shadow:0 12px 35px #0000000c}
+.metric-top{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.metric-label{font-size:11px;color:#a6b4ca;font-weight:600}
+.metric-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;color:var(--cyan);background:#57e5dc13;font-size:18px}
+.purple{color:#a5a8ff!important;background:#8f91ff16!important}
+.orange{color:var(--yellow)!important;background:#ffce7014!important}
+.pink{color:var(--red)!important;background:#ff728514!important}
+.value{font:800 clamp(25px,2.7vw,34px) Manrope;letter-spacing:-1px;margin:20px 0 8px;overflow-wrap:anywhere}
+.unit{font:500 12px 'DM Sans';color:var(--muted);letter-spacing:0}
+.metric-foot{display:flex;justify-content:space-between;align-items:center;gap:6px;color:var(--muted);font-size:10px}
+.tag{padding:5px 7px;border-radius:7px;background:#ffffff08;color:#a8b7ce;font-size:10px;white-space:nowrap}
+.good{color:var(--green)!important;background:#63e6a510!important}
+.warn{color:var(--yellow)!important;background:#ffce7010!important}
+.bad{color:var(--red)!important;background:#ff728510!important}
+.content-grid{grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr)}
+.chart{height:220px;margin-top:15px}
+.chart canvas{width:100%;height:100%;display:block}
+.legend{font-size:10px;color:var(--muted)}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-right:6px}
+.health-state{display:flex;gap:12px;align-items:center;padding:14px;background:#63e6a508;border:1px solid #63e6a51c;border-radius:13px;margin-top:12px}
+.health-symbol{width:38px;height:38px;display:grid;place-items:center;background:#63e6a514;border-radius:12px;color:var(--green);font-size:20px}
+.health-state strong{font-size:12px}
+.health-state p{font-size:10px;color:var(--muted);line-height:1.6;margin:5px 0 0}
+.sensor-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #ffffff0c}
+.sensor-row:last-child{border:0}
+.sensor-icon{height:33px;width:33px;display:grid;place-items:center;border-radius:10px;background:#ffffff08}
+.sensor-info{flex:1;min-width:0}
+.sensor-info strong{display:block;font-size:11px}
+.sensor-info small{display:block;font-size:10px;color:var(--muted);margin-top:4px}
+.sensor-state{font-size:10px;color:var(--yellow)}
+.sensor-state.on{color:var(--green)}
+.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tile{padding:17px;border:1px solid var(--line);border-radius:14px;background:#111b2b;min-width:0}
+.tile-label{font-size:10px;color:var(--muted);letter-spacing:.5px}
+.tile-value{font:700 16px Manrope;margin:10px 0 6px;overflow-wrap:anywhere}
+.tile-note{font-size:10px;color:#8291aa;line-height:1.6}
+.risk-card{position:relative;overflow:hidden}
+.risk-card:after{content:"";position:absolute;width:140px;height:140px;right:-55px;top:-65px;border-radius:50%;background:#57e5dc0c}
+.risk-value{font:800 38px Manrope;letter-spacing:-1px;margin:16px 0 5px}
+.progress{height:7px;background:#ffffff10;border-radius:9px;overflow:hidden;margin:14px 0}
+.progress span{display:block;height:100%;width:0;background:var(--green);border-radius:9px;transition:width .3s}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:500px}
+th{text-align:left;color:#7d8ca7;font-size:10px;letter-spacing:.8px;padding:13px 9px;border-bottom:1px solid var(--line)}
+td{padding:14px 9px;border-bottom:1px solid #ffffff0b;font-size:11px;color:#c6d1e4}
+.empty{text-align:center;color:var(--muted);padding:24px}
+.badge{display:inline-block;padding:5px 8px;border-radius:7px;font-size:10px;background:#ffffff09}
+.badge.pending{color:var(--yellow);background:#ffce7010}
+.badge.done{color:var(--green);background:#63e6a510}
+.action{background:none;border:0;color:var(--cyan);font-size:10px}
+.map-panel{min-height:240px;border:1px dashed #455572;border-radius:15px;background:radial-gradient(ellipse at 50% 35%,#57e5dc0b,transparent 65%);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:22px}
+.map-panel .pin{font-size:36px;margin-bottom:13px}
+.map-panel strong{font-size:13px}
+.map-panel p{max-width:320px;color:var(--muted);font-size:11px;line-height:1.7}
+.footer{text-align:center;color:#53627b;font-size:10px;line-height:1.8;padding-top:27px}
+@media(max-width:1100px){aside{width:205px}main{padding:22px 19px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid{grid-template-columns:1fr}}
+@media(max-width:700px){
+ aside{width:60px;padding:18px 7px}.brand{padding:0 0 24px;justify-content:center}
+ .brand-copy,.nav-label,.nav-text,.count,.side-status{display:none}
+ nav button{justify-content:center;padding:12px 3px}
+ main{padding:19px 12px 28px}
+ .topbar{align-items:flex-start;flex-direction:column}
+ .card{padding:13px;border-radius:14px}.metrics{gap:9px}
+ .value{font-size:24px;margin:15px 0 8px}.metric-icon{width:29px;height:29px}
+ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .chart{height:190px}
+}
+@media(max-width:380px){.metrics,.tiles{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+ <div class="brand"><div class="logo">✳</div><div class="brand-copy"><h1>SeizureWatch</h1><small>HEALTH INTELLIGENCE</small></div></div>
+ <div class="nav-label">WORKSPACE</div>
+ <nav>
+  <button class="active" data-page="overview"><span class="nav-icon">◈</span><span class="nav-text">Overview</span></button>
+  <button data-page="analytics"><span class="nav-icon">⌁</span><span class="nav-text">Health Analytics</span></button>
+  <button data-page="events"><span class="nav-icon">▤</span><span class="nav-text">Event History</span><span class="count" id="eventCount">0</span></button>
+  <button data-page="location"><span class="nav-icon">⌖</span><span class="nav-text">Device & Location</span></button>
+  <button data-page="alerts"><span class="nav-icon">♧</span><span class="nav-text">Alerts & Reports</span></button>
+ </nav>
+ <div class="side-status"><span class="dot" id="sideDot"></span><strong id="sideConnection">Connecting</strong><small>ESP32 device<br><span id="sideUpdated">Waiting for readings</span></small></div>
+</aside>
+
+<main>
+<header class="topbar">
+ <div><div class="eyebrow">BIOMEDICAL · IOT MONITORING</div><h2 id="pageTitle">Health Overview</h2><div class="sub" id="pageSubtitle">Your connected health device, at a glance.</div></div>
+ <div class="top-actions"><div class="pill"><span class="dot" id="topDot"></span><span id="topConnection">Device offline</span></div><div class="pill" id="clock">--:--:--</div><button class="btn" id="refreshBtn">↻ Refresh</button></div>
+</header>
+
+<section class="page active" id="page-overview">
+ <div class="notice">Research prototype only. Risk score and derived indicators are experimental software estimates, not validated seizure predictions or medical diagnoses. Do not rely on this dashboard for emergency response.</div>
+
+ <div class="section-head"><h3>Risk Monitoring</h3><span>Experimental rule-based score</span></div>
+ <div class="grid content-grid">
+  <article class="card risk-card">
+   <div class="metric-top"><span class="metric-label">CURRENT RISK SCORE</span><span class="tag" id="riskTag">Insufficient data</span></div>
+   <div class="risk-value" id="riskScore">— <span class="unit">/ 100</span></div>
+   <div class="progress"><span id="riskBar"></span></div>
+   <div class="metric-foot"><span id="riskMessage">Waiting for sensor readings</span><span id="riskCoverage">0/5 parameters</span></div>
+   <p class="tile-note">This score reflects only the simple thresholds implemented in this webpage. It is not an AI model or a clinically validated seizure-risk score.</p>
+  </article>
+  <article class="card">
+   <div class="section-head" style="margin-top:0"><h3>Parameter Status</h3><span>Live data</span></div>
+   <div class="sensor-row"><span class="sensor-icon">♥</span><div class="sensor-info"><strong>Heart rate</strong><small id="hrStatusDetail">Waiting for data</small></div><span class="sensor-state" id="hrStatus">—</span></div>
+   <div class="sensor-row"><span class="sensor-icon">◉</span><div class="sensor-info"><strong>SpO₂</strong><small id="spoStatusDetail">Waiting for data</small></div><span class="sensor-state" id="spoStatus">—</span></div>
+   <div class="sensor-row"><span class="sensor-icon">♨</span><div class="sensor-info"><strong>Temperature</strong><small id="tempStatusDetail">Waiting for data</small></div><span class="sensor-state" id="tempStatus">—</span></div>
+   <div class="sensor-row"><span class="sensor-icon">⌁</span><div class="sensor-info"><strong>Motion</strong><small id="motionStatusDetail">Waiting for data</small></div><span class="sensor-state" id="motionStatus">—</span></div>
+   <div class="sensor-row"><span class="sensor-icon">≈</span><div class="sensor-info"><strong>Respiration</strong><small id="respStatusDetail">Estimate, if supplied</small></div><span class="sensor-state" id="respStatus">—</span></div>
+  </article>
+ </div>
+
+ <div class="section-head"><h3>Live Vital Signs</h3><span id="readingTime">Waiting for data</span></div>
+ <div class="grid metrics">
+  <article class="card"><div class="metric-top"><span class="metric-label">Heart Rate</span><span class="metric-icon">♡</span></div><div class="value" id="heartRate">— <span class="unit">BPM</span></div><div class="metric-foot"><span>Pulse reading</span><span class="tag" id="hrQuality">No data</span></div></article>
+  <article class="card"><div class="metric-top"><span class="metric-label">Blood Oxygen</span><span class="metric-icon purple">◉</span></div><div class="value" id="spo2">— <span class="unit">%</span></div><div class="metric-foot"><span>SpO₂ reading</span><span class="tag" id="spoQuality">No data</span></div></article>
+  <article class="card"><div class="metric-top"><span class="metric-label">Temperature</span><span class="metric-icon orange">♨</span></div><div class="value" id="temperature">— <span class="unit">°C</span></div><div class="metric-foot"><span>Sensor reading</span><span class="tag" id="tempQuality">No data</span></div></article>
+  <article class="card"><div class="metric-top"><span class="metric-label">Motion</span><span class="metric-icon pink">⌁</span></div><div class="value" id="motion">— <span class="unit">m/s²</span></div><div class="metric-foot"><span>Acceleration</span><span class="tag" id="motionQuality">No data</span></div></article>
+ </div>
+
+ <div class="section-head"><h3>Monitoring Activity</h3><span>Recent server history</span></div>
+ <div class="grid content-grid">
+  <article class="card"><div class="section-head" style="margin-top:0"><h3>Heart Rate Trend</h3><span>Recent samples</span></div><div class="legend"><i></i> Heart rate</div><div class="chart"><canvas id="hrChart"></canvas></div></article>
+  <article class="card">
+   <div class="section-head" style="margin-top:0"><h3>Device Health</h3><span>Sensor data status</span></div>
+   <div class="health-state"><div class="health-symbol">⌁</div><div><strong id="deviceState">Waiting for device</strong><p id="deviceMessage">Connect ESP32 to view readings.</p></div></div>
+   <div class="sensor-row"><span class="sensor-icon">♥</span><div class="sensor-info"><strong>MAX30102</strong><small>Pulse / oxygen</small></div><span class="sensor-state" id="sensorMAX">Waiting</span></div>
+   <div class="sensor-row"><span class="sensor-icon">♨</span><div class="sensor-info"><strong>DS18B20</strong><small>Temperature</small></div><span class="sensor-state" id="sensorTEMP">Waiting</span></div>
+   <div class="sensor-row"><span class="sensor-icon">⌁</span><div class="sensor-info"><strong>MPU6050</strong><small>Motion</small></div><span class="sensor-state" id="sensorMPU">Waiting</span></div>
+   <div class="sensor-row"><span class="sensor-icon">⌖</span><div class="sensor-info"><strong>GPS</strong><small>Location</small></div><span class="sensor-state" id="sensorGPS">Waiting</span></div>
+  </article>
+ </div>
+
+ <div class="section-head"><h3>Health Intelligence</h3><span>Estimates only</span></div>
+ <div class="grid tiles">
+  <article class="tile"><div class="tile-label">ACTIVITY</div><div class="tile-value" id="activity">Insufficient data</div><div class="tile-note">Movement-based classification supplied by backend.</div></article>
+  <article class="tile"><div class="tile-label">STRESS INDICATOR</div><div class="tile-value" id="stress">Insufficient data</div><div class="tile-note">Experimental estimate; not a clinical stress measurement.</div></article>
+  <article class="tile"><div class="tile-label">SLEEP ESTIMATE</div><div class="tile-value" id="sleep">Insufficient data</div><div class="tile-note">Movement heuristic only; no sleep stages.</div></article>
+  <article class="tile"><div class="tile-label">RESPIRATION ESTIMATE</div><div class="tile-value" id="respiration">Insufficient data</div><div class="tile-note">Shown only when a rate is supplied by the backend.</div></article>
+  <article class="tile"><div class="tile-label">PPG SIGNAL QUALITY</div><div class="tile-value" id="ppgQuality">Unknown</div><div class="tile-note">Poor signal may make pulse readings unreliable.</div></article>
+  <article class="tile"><div class="tile-label">BATTERY</div><div class="tile-value" id="battery">Unknown</div><div class="tile-note">Requires a battery value from the device.</div></article>
+ </div>
+
+ <div class="section-head"><h3>Recent Events</h3><button class="btn" data-goto="events">View all →</button></div>
+ <article class="card"><div class="table-wrap"><table><thead><tr><th>EVENT</th><th>TIME</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id="recentEvents"><tr><td colspan="4" class="empty">No events received yet.</td></tr></tbody></table></div></article>
+</section>
+
+<section class="page" id="page-analytics">
+ <div class="notice">Analytics use readings returned by the server. Missing measurements are not fabricated. Experimental estimates are not medical measurements.</div>
+ <div class="section-head"><h3>Health Analytics</h3><span>Stored data</span></div>
+ <div class="grid metrics">
+  <article class="card"><div class="metric-label">Average Heart Rate</div><div class="value" id="avgHR">—</div><div class="metric-foot">BPM</div></article>
+  <article class="card"><div class="metric-label">Average SpO₂</div><div class="value" id="avgSpO2">—</div><div class="metric-foot">Percent</div></article>
+  <article class="card"><div class="metric-label">Average Temperature</div><div class="value" id="avgTemp">—</div><div class="metric-foot">°C</div></article>
+  <article class="card"><div class="metric-label">Stored Readings</div><div class="value" id="totalReadings">0</div><div class="metric-foot">Server history</div></article>
+ </div>
+ <div class="section-head"><h3>Heart Rate History</h3><span>Recent samples</span></div>
+ <article class="card"><div class="chart"><canvas id="analyticsChart"></canvas></div></article>
+ <div class="section-head"><h3>Derived Indicators</h3></div>
+ <div class="grid tiles">
+  <article class="tile"><div class="tile-label">ACTIVITY</div><div class="tile-value" id="analyticsActivity">Insufficient data</div></article>
+  <article class="tile"><div class="tile-label">STRESS ESTIMATE</div><div class="tile-value" id="analyticsStress">Insufficient data</div></article>
+  <article class="tile"><div class="tile-label">RESPIRATION</div><div class="tile-value" id="analyticsResp">Insufficient data</div></article>
+ </div>
+</section>
+
+<section class="page" id="page-events">
+ <div class="section-head"><h3>Event History</h3><span id="eventsSummary">Stored device events</span></div>
+ <article class="card"><div class="table-wrap"><table><thead><tr><th>EVENT</th><th>TIME</th><th>DETAILS</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id="allEvents"><tr><td colspan="5" class="empty">No events received yet.</td></tr></tbody></table></div></article>
+</section>
+
+<section class="page" id="page-location">
+ <div class="section-head"><h3>Device & Location</h3><span>GPS data</span></div>
+ <div class="grid content-grid">
+  <article class="card"><div class="section-head" style="margin-top:0"><h3>Device Information</h3></div>
+   <div class="sensor-row"><div class="sensor-info"><strong>Device ID</strong><small>Reported by backend</small></div><span id="deviceId">—</span></div>
+   <div class="sensor-row"><div class="sensor-info"><strong>Latitude</strong><small>GPS coordinate</small></div><span id="latitude">—</span></div>
+   <div class="sensor-row"><div class="sensor-info"><strong>Longitude</strong><small>GPS coordinate</small></div><span id="longitude">—</span></div>
+   <div class="sensor-row"><div class="sensor-info"><strong>GPS Status</strong><small>Coordinate validity</small></div><span id="gpsStatus">Unavailable</span></div>
+   <button class="btn primary" id="mapBtn" disabled style="margin-top:15px">Open map location ↗</button>
+  </article>
+  <article class="card"><div class="map-panel"><div class="pin">⌖</div><strong id="mapTitle">Waiting for GPS</strong><p id="mapDescription">A map link will be available when valid GPS coordinates arrive.</p></div></article>
+ </div>
+</section>
+
+<section class="page" id="page-alerts">
+ <div class="notice">This page shows server-recorded alerts. Website alerts do not automatically send phone notifications; Blynk event configuration and backend/device integration are required for that.</div>
+ <div class="section-head"><h3>Alerts & Reports</h3><button class="btn primary" id="exportBtn">↓ Export CSV</button></div>
+ <div class="grid metrics">
+  <article class="card"><div class="metric-label">Recorded Events</div><div class="value" id="alertEventCount">0</div></article>
+  <article class="card"><div class="metric-label">Acknowledged</div><div class="value" id="ackCount">0</div></article>
+  <article class="card"><div class="metric-label">Pending Review</div><div class="value" id="pendingCount">0</div></article>
+  <article class="card"><div class="metric-label">Device Connection</div><div class="value" id="alertDeviceState" style="font-size:20px">Unknown</div></article>
+ </div>
+ <div class="section-head"><h3>Alert Log</h3><span>Backend records</span></div>
+ <article class="card"><div class="table-wrap"><table><thead><tr><th>ALERT</th><th>TIME</th><th>DETAILS</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id="alertTable"><tr><td colspan="5" class="empty">No alerts received yet.</td></tr></tbody></table></div></article>
+</section>
+
+<div class="footer">SEIZUREWATCH PRO · BIOMEDICAL IOT RESEARCH PROTOTYPE<br>Not intended for diagnosis, treatment decisions, or emergency monitoring.</div>
+</main>
+</div>
+
+<script>
+"use strict";
+
+const $=id=>document.getElementById(id);
+const state={latest:null,history:[],events:[],lastAt:0,mapUrl:null};
+
+const pageInfo={
+ overview:["Health Overview","Your connected health device, at a glance."],
+ analytics:["Health Analytics","Explore available trends and stored readings."],
+ events:["Event History","Review and acknowledge recorded events."],
+ location:["Device & Location","Device identity and reported GPS coordinates."],
+ alerts:["Alerts & Reports","Review alerts and export readings."]
+};
+
+function num(v){
+ if(v===null||v===undefined||v==="")return null;
+ const n=Number(v);
+ return Number.isFinite(n)?n:null;
+}
+function pick(o,keys){
+ for(const k of keys){
+  if(o&&o[k]!==undefined&&o[k]!==null&&o[k]!=="")return o[k];
+ }
+ return null;
+}
+function number(o,keys){return num(pick(o,keys))}
+function text(id,v){
+ const el=$(id);
+ if(el)el.textContent=v===null||v===undefined||v===""?"—":String(v);
+}
+function fmt(v,d=1){const n=num(v);return n===null?"—":n.toFixed(d)}
+function metric(id,v,unit,d=1){
+ $(id).innerHTML=(v===null?"—":fmt(v,d))+' <span class="unit">'+unit+'</span>';
+}
+function dateOf(o){
+ const v=pick(o,["timestamp","createdAt","created_at","time","date"]);
+ if(v===null)return null;
+ const d=typeof v==="number"?new Date(v<1e12?v*1000:v):new Date(v);
+ return Number.isNaN(d.getTime())?null:d;
+}
+function timeOf(o){const d=dateOf(o);return d?d.toLocaleString():"Time unavailable"}
+function safe(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+function rows(payload,key){
+ if(Array.isArray(payload))return payload;
+ if(Array.isArray(payload?.[key]))return payload[key];
+ if(Array.isArray(payload?.data))return payload.data;
+ if(Array.isArray(payload?.results))return payload.results;
+ return [];
+}
+function showPage(name){
+ if(!pageInfo[name])return;
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+ $("page-"+name).classList.add("active");
+ text("pageTitle",pageInfo[name][0]);
+ text("pageSubtitle",pageInfo[name][1]);
+ if(name==="analytics")drawChart("analyticsChart",state.history);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+document.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>showPage(b.dataset.goto));
+
+function drawChart(id,data){
+ const canvas=$(id);
+ if(!canvas)return;
+ const rect=canvas.getBoundingClientRect();
+ const ratio=window.devicePixelRatio||1;
+ const w=Math.max(260,rect.width),h=Math.max(150,rect.height);
+ canvas.width=w*ratio;canvas.height=h*ratio;
+ const c=canvas.getContext("2d");
+ c.setTransform(ratio,0,0,ratio,0,0);
+ c.clearRect(0,0,w,h);
+ const pad={l:35,r:10,t:12,b:25},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+ const vals=(data||[]).map(r=>number(r,["heartRate","heart_rate","hr","bpm"]));
+ const valid=vals.filter(v=>v!==null);
+ if(valid.length<2){
+  c.fillStyle="#8998b2";c.font="12px DM Sans";c.textAlign="center";
+  c.fillText(valid.length?"More readings needed":"Waiting for heart-rate history",w/2,h/2);
+  return;
+ }
+ let min=Math.floor(Math.min(...valid)-5),max=Math.ceil(Math.max(...valid)+5);
+ if(max-min<10){min-=5;max+=5}
+ c.font="10px DM Sans";c.textAlign="right";
+ for(let i=0;i<=4;i++){
+  const y=pad.t+ch*i/4;
+  c.strokeStyle="#ffffff10";c.beginPath();c.moveTo(pad.l,y);c.lineTo(w-pad.r,y);c.stroke();
+  c.fillStyle="#8190a9";c.fillText((max-(max-min)*i/4).toFixed(0),pad.l-7,y+3);
+ }
+ const pts=[];
+ vals.forEach((v,i)=>{
+  if(v!==null)pts.push({x:pad.l+i*cw/Math.max(1,vals.length-1),y:pad.t+(max-v)*ch/(max-min)});
+ });
+ if(pts.length<2)return;
+ const grad=c.createLinearGradient(0,pad.t,0,h-pad.b);
+ grad.addColorStop(0,"#57e5dc30");grad.addColorStop(1,"#57e5dc00");
+ c.beginPath();
+ pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));
+ c.lineTo(pts[pts.length-1].x,h-pad.b);
+ c.lineTo(pts[0].x,h-pad.b);c.closePath();c.fillStyle=grad;c.fill();
+ c.beginPath();
+ pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));
+ c.strokeStyle="#57e5dc";c.lineWidth=2;c.stroke();
+ const last=pts[pts.length-1];
+ c.beginPath();c.arc(last.x,last.y,3.5,0,Math.PI*2);c.fillStyle="#57e5dc";c.fill();
+ c.fillStyle="#8190a9";c.textAlign="left";c.fillText("Older",pad.l,h-5);
+ c.textAlign="right";c.fillText("Recent",w-pad.r,h-5);
+}
+
+function setSensor(id,ok){
+ $(id).textContent=ok?"Data available":"No data";
+ $(id).className="sensor-state"+(ok?" on":"");
+}
+function status(id,detailId,label,detail,kind){
+ text(id,label);text(detailId,detail);
+ $(id).className="sensor-state"+(kind==="good"?" on":"");
+ if(kind==="bad")$(id).style.color="var(--red)";
+ else if(kind==="warn")$(id).style.color="var(--yellow)";
+ else $(id).style.color="";
+}
+function setTag(id,label,kind){
+ text(id,label);
+ $(id).className="tag"+(kind?" "+kind:"");
+}
+
+/*
+ Experimental dashboard score only.
+ It uses available readings and simple thresholds.
+ It is NOT a validated seizure-risk algorithm.
+*/
+function calculateRisk(d){
+ const values={
+  hr:number(d,["heartRate","heart_rate","hr","bpm"]),
+  spo:number(d,["spo2","SpO2","spo_2"]),
+  temp:number(d,["temperature","temp"]),
+  motion:number(d,["motion","acceleration","motionMagnitude"]),
+  resp:number(d,["respiration","respirationRate","respiration_rate","respiratoryRate","resp_rate"])
+ };
+ let points=0,available=0;
+ const reasons=[];
+
+ if(values.hr!==null){
+  available++;
+  if(values.hr<40||values.hr>130){points+=30;reasons.push("Heart rate outside configured limits")}
+  else if(values.hr<50||values.hr>110){points+=15;reasons.push("Heart rate needs review")}
+ }
+ if(values.spo!==null){
+  available++;
+  if(values.spo<90){points+=35;reasons.push("SpO₂ below configured limit")}
+  else if(values.spo<94){points+=15;reasons.push("SpO₂ needs review")}
+ }
+ if(values.temp!==null){
+  available++;
+  if(values.temp>=38){points+=25;reasons.push("High temperature threshold")}
+  else if(values.temp>=37.5){points+=10;reasons.push("Temperature needs review")}
+ }
+ if(values.motion!==null){
+  available++;
+  if(values.motion>25){points+=20;reasons.push("High motion threshold")}
+ }
+ if(values.resp!==null){
+  available++;
+  if(values.resp<8||values.resp>25){points+=15;reasons.push("Respiration estimate outside configured range")}
+ }
+ return {score:Math.min(100,points),available,reasons,values};
+}
+function renderRisk(d){
+ const r=calculateRisk(d);
+ text("riskScore",r.available?r.score+" / 100":"— / 100");
+ text("riskCoverage",r.available+"/5 parameters");
+ $("riskBar").style.width=r.score+"%";
+ $("riskBar").style.background=r.score>=50?"var(--red)":r.score>=25?"var(--yellow)":"var(--green)";
+ if(!r.available){
+  setTag("riskTag","Insufficient data","warn");
+  text("riskMessage","Waiting for sensor readings");
+ }else if(r.score>=50){
+  setTag("riskTag","High rule score","bad");
+  text("riskMessage",r.reasons.join("; ")||"Review readings");
+ }else if(r.score>=25){
+  setTag("riskTag","Review readings","warn");
+  text("riskMessage",r.reasons.join("; ")||"Some readings need review");
+ }else{
+  setTag("riskTag","Low rule score","good");
+  text("riskMessage",r.reasons.join("; ")||"No configured threshold exceeded");
+ }
+
+ const v=r.values;
+ status("hrStatus","hrStatusDetail",v.hr===null?"—":v.hr<40||v.hr>130?"Review":"Received",
+  v.hr===null?"No heart-rate value":v.hr+" BPM",
+  v.hr===null?"":v.hr<40||v.hr>130?"bad":"good");
+ status("spoStatus","spoStatusDetail",v.spo===null?"—":v.spo<90?"Review":"Received",
+  v.spo===null?"No SpO₂ value":v.spo+"%",
+  v.spo===null?"":v.spo<90?"bad":"good");
+ status("tempStatus","tempStatusDetail",v.temp===null?"—":v.temp>=38?"Review":"Received",
+  v.temp===null?"No temperature value":v.temp.toFixed(1)+" °C",
+  v.temp===null?"":v.temp>=38?"bad":"good");
+ status("motionStatus","motionStatusDetail",v.motion===null?"—":v.motion>25?"High motion":"Received",
+  v.motion===null?"No motion value":v.motion.toFixed(2)+" m/s²",
+  v.motion===null?"":v.motion>25?"warn":"good");
+ status("respStatus","respStatusDetail",v.resp===null?"—":"Estimate received",
+  v.resp===null?"No backend respiration value":v.resp+" breaths/min",
+  v.resp===null?"":"good");
+}
+
+function renderLatest(d){
+ if(!d||typeof d!=="object")return;
+ state.latest=d;
+
+ const hr=number(d,["heartRate","heart_rate","hr","bpm"]);
+ const spo=number(d,["spo2","SpO2","spo_2"]);
+ const temp=number(d,["temperature","temp"]);
+ const motion=number(d,["motion","acceleration","motionMagnitude"]);
+ metric("heartRate",hr,"BPM",0);
+ metric("spo2",spo,"%",0);
+ metric("temperature",temp,"°C",1);
+ metric("motion",motion,"m/s²",2);
+
+ setTag("hrQuality",hr===null?"No data":"Received",hr===null?"warn":"good");
+ setTag("spoQuality",spo===null?"No data":"Received",spo===null?"warn":"good");
+ setTag("tempQuality",temp===null?"No data":"Received",temp===null?"warn":"good");
+ setTag("motionQuality",motion===null?"No data":"Received",motion===null?"warn":"good");
+
+ text("activity",pick(d,["activity","activityState"])||"Insufficient data");
+ text("stress",pick(d,["stress","stressState","stressEstimate"])||"Insufficient data");
+ text("sleep",pick(d,["sleepEstimate","sleep_estimate","sleepState"])||"Insufficient data");
+
+ const rr=number(d,["respiration","respirationRate","respiration_rate","respiratoryRate","resp_rate"]);
+ text("respiration",rr===null?"Insufficient data":fmt(rr,0)+" breaths/min");
+ text("ppgQuality",pick(d,["ppgQuality","ppg_quality","signalQuality"])||"Unknown");
+ const batt=number(d,["battery","batteryLevel","batteryPercent","battery_percentage"]);
+ text("battery",batt===null?"Unknown":fmt(batt,0)+"%");
+ text("lastUpdate",timeOf(d));
+ text("readingTime","Updated "+new Date().toLocaleTimeString());
+ renderRisk(d);
+
+ const lat=number(d,["latitude","lat"]),lon=number(d,["longitude","lon","lng"]);
+ const gps=lat!==null&&lon!==null&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0);
+ text("deviceId",pick(d,["deviceId","device_id"])||"ESP32");
+ text("latitude",lat===null?"—":lat.toFixed(6));
+ text("longitude",lon===null?"—":lon.toFixed(6));
+ text("gpsStatus",gps?"Coordinates available":"Unavailable");
+ setSensor("sensorMAX",hr!==null||spo!==null);
+ setSensor("sensorTEMP",temp!==null);
+ setSensor("sensorMPU",motion!==null);
+ setSensor("sensorGPS",gps);
+ state.mapUrl=gps?"https://www.google.com/maps?q="+encodeURIComponent(lat+","+lon):null;
+ $("mapBtn").disabled=!gps;
+ text("mapTitle",gps?"GPS coordinates received":"Waiting for GPS");
+ text("mapDescription",gps?"Open the reported coordinates in a map.":"No valid GPS fix received yet.");
+
+ const dt=dateOf(d);
+ state.lastAt=dt?dt.getTime():Date.now();
+}
+
+function renderAnalytics(a){
+ const hr=number(a,["averageHeartRate","avgHeartRate","avg_hr"]);
+ const spo=number(a,["averageSpo2","avgSpo2","avg_spo2"]);
+ const temp=number(a,["averageTemperature","avgTemperature","avg_temp"]);
+ text("avgHR",hr===null?"—":fmt(hr)+" BPM");
+ text("avgSpO2",spo===null?"—":fmt(spo)+"%");
+ text("avgTemp",temp===null?"—":fmt(temp)+" °C");
+ text("totalReadings",pick(a,["totalReadings","count"])??state.history.length);
+ text("analyticsActivity",pick(a,["activity","activityState"])||"Insufficient data");
+ text("analyticsStress",pick(a,["stress","stressState","stressEstimate"])||"Insufficient data");
+ const rr=number(a,["respiration","respirationRate","respiration_rate","respiratoryRate"]);
+ text("analyticsResp",rr===null?"Insufficient data":fmt(rr,0)+" breaths/min");
+}
+function acked(e){
+ return e.acknowledged===true||["acknowledged","resolved","closed"].includes(String(pick(e,["status","state"])||"").toLowerCase());
+}
+function eventName(e){return pick(e,["title","eventType","event_type","type","name"])||"Device event"}
+function eventId(e){return pick(e,["id","_id","eventId","event_id"])}
+function eventRow(e,details){
+ const ack=acked(e),id=eventId(e);
+ const extra=pick(e,["details","description","message","value"])||"No details";
+ return `<tr>
+ <td>${safe(eventName(e))}</td>
+ <td>${safe(timeOf(e))}</td>
+ ${details?`<td>${safe(extra)}</td>`:""}
+ <td><span class="badge ${ack?"done":"pending"}">${ack?"Acknowledged":"Pending review"}</span></td>
+ <td>${ack||id===null?"—":`<button class="action" data-ack="${safe(id)}">Acknowledge</button>`}</td>
+ </tr>`;
+}
+function renderEvents(){
+ const count=state.events.length;
+ text("eventCount",count);
+ text("eventsSummary",count+" stored event(s)");
+ const all=count?state.events.map(e=>eventRow(e,true)).join(""):'<tr><td colspan="5" class="empty">No events received yet.</td></tr>';
+ $("allEvents").innerHTML=all;
+ $("alertTable").innerHTML=all;
+ $("recentEvents").innerHTML=count?state.events.slice(0,5).map(e=>eventRow(e,false)).join(""):'<tr><td colspan="4" class="empty">No events received yet.</td></tr>';
+ const ack=state.events.filter(acked).length;
+ text("alertEventCount",count);
+ text("ackCount",ack);
+ text("pendingCount",count-ack);
+}
+
+document.addEventListener("click",async ev=>{
+ const btn=ev.target.closest("[data-ack]");
+ if(!btn)return;
+ btn.disabled=true;
+ try{
+  const r=await fetch("/api/events/"+encodeURIComponent(btn.dataset.ack)+"/acknowledge",{method:"POST"});
+  if(!r.ok)throw Error("Request failed");
+  await loadAll();
+ }catch(e){
+  btn.disabled=false;
+  alert("Could not acknowledge event. Check server.js and the event ID.");
+ }
+});
+
+function connection(on){
+ text("sideConnection",on?"Device online":"Device offline");
+ text("topConnection",on?"Device connected":"Device offline");
+ $("sideDot").className="dot "+(on?"on":"off");
+ $("topDot").className="dot "+(on?"on":"off");
+ text("sideUpdated",on?"Recent data received":"No recent readings");
+ text("deviceState",on?"Device connected":"Device offline");
+ text("deviceMessage",on?"Recent readings received by the server.":"Check the ESP32, Wi-Fi and backend connection.");
+ text("alertDeviceState",on?"Online":"Offline");
+}
+async function getJSON(url){
+ const r=await fetch(url,{cache:"no-store"});
+ if(!r.ok)throw Error(url+" HTTP "+r.status);
+ return r.json();
+}
+async function loadAll(){
+ const jobs=[
+  ["/api/latest",d=>renderLatest(d?.latest||d?.reading||d?.data||d)],
+  ["/api/history?limit=40",d=>{
+   state.history=rows(d,"readings").slice(-40);
+   drawChart("hrChart",state.history);
+   drawChart("analyticsChart",state.history);
+  }],
+  ["/api/analytics",d=>renderAnalytics(d?.analytics||d?.data||d)],
+  ["/api/events",d=>{state.events=rows(d,"events");renderEvents()}],
+  ["/api/alerts",d=>{
+   const alerts=rows(d,"alerts");
+   if(!state.events.length&&alerts.length){state.events=alerts;renderEvents()}
+  }]
+ ];
+ await Promise.all(jobs.map(async([url,fn])=>{
+  try{fn(await getJSON(url))}
+  catch(e){console.warn(url,e.message)}
+ }));
+ const d=state.latest,dt=d?dateOf(d):null;
+ connection(Boolean(d&&dt&&Date.now()-dt.getTime()<15000));
+}
+$("mapBtn").onclick=()=>{
+ if(state.mapUrl)window.open(state.mapUrl,"_blank","noopener,noreferrer");
+};
+$("refreshBtn").onclick=loadAll;
+$("exportBtn").onclick=async()=>{
+ try{
+  const r=await fetch("/api/export/readings.csv");
+  if(!r.ok)throw Error("Export failed");
+  const url=URL.createObjectURL(await r.blob());
+  const a=document.createElement("a");
+  a.href=url;a.download="seizurewatch-readings.csv";a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }catch(e){alert("CSV export failed. Check the server route.");}
+};
+function tick(){
+ text("clock",new Date().toLocaleTimeString());
+ if(state.lastAt&&Date.now()-state.lastAt>15000)connection(false);
+}
+window.addEventListener("resize",()=>{
+ drawChart("hrChart",state.history);
+ if($("page-analytics").classList.contains("active"))drawChart("analyticsChart",state.history);
+});
+tick();
+setInterval(tick,1000);
+loadAll();
+setInterval(loadAll,3000);
+</script>
+</body>
+</html>
